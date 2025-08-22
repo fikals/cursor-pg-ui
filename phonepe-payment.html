@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhonePe Payment Gateway - Educational Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .payment-container {
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            max-width: 380px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Merchant Header */
+        .merchant-header {
+            display: flex;
+            align-items: center;
+            padding: 20px 18px;
+            border-bottom: 1px solid #f1f3f4;
+            background: #fafbfc;
+        }
+
+        .merchant-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 14px;
+            box-shadow: 0 3px 10px rgba(255, 149, 0, 0.3);
+        }
+
+        .merchant-info {
+            flex: 1;
+        }
+
+        .merchant-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a1a1a;
+            line-height: 1.3;
+        }
+
+        .merchant-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            padding: 0;
+        }
+
+        .payment-method {
+            border-bottom: 1px solid #f1f3f4;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:last-child {
+            border-bottom: none;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 16px 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            background: #ffffff;
+        }
+
+        .payment-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .payment-option.active {
+            background-color: #f0f8ff;
+        }
+
+        .payment-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #5f27cd;
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1a1a;
+            margin-bottom: 3px;
+        }
+
+        .payment-subtitle {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .payment-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            position: relative;
+            margin-left: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .payment-radio.selected {
+            border-color: #00c853;
+            background-color: #00c853;
+            transform: scale(1.1);
+        }
+
+        .payment-radio.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .payment-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            background: #f8f9ff;
+            border-top: 1px solid #e8eaed;
+        }
+
+        .payment-content.active {
+            max-height: 700px;
+            padding: 20px 18px;
+        }
+
+        /* QR Code Styles */
+        .qr-container {
+            text-align: center;
+        }
+
+        .qr-code {
+            width: 160px;
+            height: 160px;
+            margin: 16px auto;
+            border: 2px solid #5f27cd;
+            border-radius: 10px;
+            background: white;
+            padding: 6px;
+        }
+
+        .payment-status {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .status-text {
+            color: #5f6368;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .timer {
+            color: #00c853;
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .loading-progress {
+            width: 70px;
+            height: 5px;
+            background: #e8eaed;
+            border-radius: 3px;
+            margin: 10px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #5f27cd, #9c88ff, #5f27cd);
+            animation: loading 2s infinite;
+            border-radius: 3px;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .upi-apps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .upi-app {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .and-more {
+            color: #5f6368;
+            font-size: 13px;
+            margin-left: 6px;
+        }
+
+        /* UPI ID Styles */
+        .upi-input-container {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .upi-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8eaed;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .upi-input:focus {
+            outline: none;
+            border-color: #5f27cd;
+            box-shadow: 0 0 0 3px rgba(95, 39, 205, 0.1);
+        }
+
+        .upi-hint {
+            color: #5f6368;
+            font-size: 12px;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        /* Card Styles */
+        .card-form {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1a1a1a;
+            font-size: 13px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e8eaed;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #5f27cd;
+            box-shadow: 0 0 0 3px rgba(95, 39, 205, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .cvv-info {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 6px;
+            width: 16px;
+            height: 16px;
+            background: #5f6368;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            justify-content: center;
+            cursor: help;
+            font-weight: bold;
+        }
+
+        /* Net Banking Styles */
+        .bank-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .bank-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border: 2px solid #e8eaed;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background: white;
+        }
+
+        .bank-option:hover {
+            border-color: #5f27cd;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(95, 39, 205, 0.15);
+        }
+
+        .bank-option.selected {
+            border-color: #5f27cd;
+            background-color: #f3e5f5;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(95, 39, 205, 0.2);
+        }
+
+        .bank-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            object-fit: cover;
+        }
+
+        .bank-name {
+            font-size: 11px;
+            font-weight: 500;
+            color: #1a1a1a;
+            line-height: 1.2;
+        }
+
+        .others-bank {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #f1f3f4;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 16px;
+            color: #5f6368;
+        }
+
+        /* Bank Selection Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 360px;
+            max-height: 80vh;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 18px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 14px;
+            color: #2c2c2c;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        .modal-subtitle {
+            color: #666;
+            font-size: 13px;
+            padding: 0 18px 16px;
+        }
+
+        .search-container {
+            padding: 0 18px 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px 10px 36px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTcuMzMzIDEyLjY2N0M5Ljg5MiAxMi42NjcgMTIgMTAuNTU5IDEyIDhDMTIgNS40NDEgOS44OTIgMy4zMzMgNy4zMzMgMy4zMzNDNC43NzQgMy4zMzMgMi42NjcgNS40NDEgMi42NjcgOEMyLjY2NyAxMC41NTkgNC43NzQgMTIuNjY3IDcuMzMzIDEyLjY2N1oiIHN0cm9rZT0iIzk5OTk5OSIgc3Ryb2tlLXdpZHRoPSIxLjMzMzMzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTEzLjMzMyAxMy4zMzNMMTAuNSAxMC41IiBzdHJva2U9IiM5OTk5OTkiIHN0cm9rZS13aWR0aD0iMS4zMzMzMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=') no-repeat 10px center;
+        }
+
+        .bank-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 0 18px 16px;
+        }
+
+        .bank-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .bank-item:hover {
+            background: #f8f9fa;
+        }
+
+        .bank-item:last-child {
+            border-bottom: none;
+        }
+
+        .bank-item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .bank-item-name {
+            font-size: 15px;
+            color: #2c2c2c;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 30px 18px;
+            color: #666;
+        }
+
+        /* Footer */
+        .payment-footer {
+            padding: 18px;
+            text-align: center;
+            border-top: 1px solid #f1f3f4;
+            background: #fafbfc;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .powered-by {
+            color: #5f6368;
+            font-size: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .phonepe-logo {
+            width: 18px;
+            height: 18px;
+            background: #5f27cd;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .phonepe-text {
+            color: #5f27cd;
+            font-weight: 600;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(95, 39, 205, 0.3);
+        }
+
+        .pay-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(95, 39, 205, 0.4);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
+        }
+
+        .pay-button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .payment-content.active {
+            animation: slideIn 0.4s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .payment-container {
+                margin: 0;
+                border-radius: 10px;
+                max-width: 100%;
+            }
+            
+            .merchant-header {
+                padding: 16px;
+            }
+            
+            .merchant-logo {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+            
+            .merchant-amount {
+                font-size: 22px;
+            }
+            
+            .payment-option {
+                padding: 14px 16px;
+            }
+            
+            .payment-content.active {
+                padding: 16px;
+            }
+            
+            .bank-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            
+            .bank-option {
+                padding: 8px 4px;
+            }
+            
+            .bank-logo, .others-bank {
+                width: 28px;
+                height: 28px;
+            }
+            
+            .bank-name {
+                font-size: 10px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .form-row .form-group:last-child {
+                grid-column: span 2;
+            }
+            
+            .qr-code {
+                width: 140px;
+                height: 140px;
+            }
+            
+            .payment-footer {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .bank-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .upi-apps {
+                gap: 6px;
+            }
+            
+            .upi-app {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        /* Success states */
+        .payment-method.completed {
+            background: #e8f5e8;
+        }
+
+        .payment-method.completed .payment-option {
+            background: #e8f5e8;
+        }
+
+        /* Loading states */
+        .processing {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #5f27cd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <!-- Merchant Header -->
+        <div class="merchant-header">
+            <div class="merchant-logo">U</div>
+            <div class="merchant-info">
+                <div class="merchant-name">PAPAYA CODERS PRIVATE LIMITED</div>
+            </div>
+            <div class="merchant-amount">₹1</div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-methods">
+            <!-- QR Code Payment -->
+            <div class="payment-method" id="qr-method">
+                <div class="payment-option" onclick="selectPaymentMethod('qr')">
+                    <div class="payment-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM19 13h2v2h-2zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM15 19h2v2h-2zM17 17h2v2h-2zM17 19h2v2h-2zM19 17h2v2h-2zM19 19h2v2h-2z"/>
+                        </svg>
+                    </div>
+                    <div class="payment-details">
+                        <div class="payment-title">Show QR Code</div>
+                        <div class="payment-subtitle">Scan with any UPI app</div>
+                    </div>
+                    <div class="payment-radio" id="qr-radio"></div>
+                </div>
+                <div class="payment-content" id="qr-content">
+                    <div class="qr-container">
+                        <img src="https://placehold.co/160x160" alt="PhonePe QR code with embedded UPI payment details, merchant information, and amount of rupee 1, featuring black and white square pattern with PhonePe logo in center" class="qr-code" />
+                        <div class="payment-status">
+                            <div class="status-text">Checking payment status...</div>
+                            <div class="timer" id="timer">19:52</div>
+                            <div class="loading-progress"></div>
+                        </div>
+                        <div class="upi-apps">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dd47586a-6057-41bb-b508-1eb6c627baee.png" alt="PhonePe app icon with purple circular background and white stylized P logo" class="upi-app" />
+                            <img src="https://placehold.co/38x38" alt="Google Pay app icon with white background and colorful G Pay logo in blue red yellow green" class="upi-app" />
+                            <img src="https://placehold.co/38x38" alt="Paytm app icon with blue background and white P letter logo" class="upi-app" />
+                            <img src="https://placehold.co/38x38" alt="BHIM UPI app icon with tricolor design featuring saffron white and green with national emblem" class="upi-app" />
+                            <span class="and-more">and more</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPI ID Payment -->
+            <div class="payment-method" id="upi-method">
+                <div class="payment-option" onclick="selectPaymentMethod('upi')">
+                    <div class="payment-icon">@</div>
+                    <div class="payment-details">
+                        <div class="payment-title">UPI ID</div>
+                        <div class="payment-subtitle">PhonePe, Gpay, Paytm, BHIM & more</div>
+                    </div>
+                    <div class="payment-radio" id="upi-radio"></div>
+                </div>
+                <div class="payment-content" id="upi-content">
+                    <div class="upi-input-container">
+                        <input type="text" class="upi-input" placeholder="Enter your UPI ID" id="upi-id" />
+                        <div class="upi-hint">
+                            Enter your UPI ID (e.g., yourname@paytm, yourname@phonepe)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Payment -->
+            <div class="payment-method" id="card-method">
+                <div class="payment-option" onclick="selectPaymentMethod('card')">
+                    <div class="payment-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                        </svg>
+                    </div>
+                    <div class="payment-details">
+                        <div class="payment-title">Card</div>
+                        <div class="payment-subtitle">Visa, Mastercard, Rupay & more</div>
+                    </div>
+                    <div class="payment-radio" id="card-radio"></div>
+                </div>
+                <div class="payment-content" id="card-content">
+                    <div class="card-form">
+                        <div class="form-group">
+                            <label class="form-label">Card number</label>
+                            <input type="text" class="form-input" placeholder="Enter your card number" id="card-number" maxlength="19" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-input" placeholder="Enter card holder's full name" id="card-name" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Valid till</label>
+                                <input type="text" class="form-input" placeholder="MM" id="card-month" maxlength="2" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="color: transparent;">.</label>
+                                <input type="text" class="form-input" placeholder="YY" id="card-year" maxlength="2" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">CVV <span class="cvv-info">?</span></label>
+                                <input type="text" class="form-input" placeholder="CVV" id="card-cvv" maxlength="3" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Banking -->
+            <div class="payment-method" id="netbanking-method">
+                <div class="payment-option" onclick="selectPaymentMethod('netbanking')">
+                    <div class="payment-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M5 9h14l-7-7-7 7zM5 11v7h4v-4h2v4h4v-7H5z"/>
+                        </svg>
+                    </div>
+                    <div class="payment-details">
+                        <div class="payment-title">Net Banking</div>
+                        <div class="payment-subtitle">Choose your bank to complete payment</div>
+                    </div>
+                    <div class="payment-radio" id="netbanking-radio"></div>
+                </div>
+                <div class="payment-content" id="netbanking-content">
+                    <div class="bank-grid">
+                        <div class="bank-option" onclick="selectBank(this, 'hdfc')">
+                            <img src="https://placehold.co/32x32" alt="HDFC Bank logo with red and blue corporate colors featuring stylized building design" class="bank-logo" />
+                            <div class="bank-name">HDFC Bank</div>
+                        </div>
+                        <div class="bank-option" onclick="selectBank(this, 'icici')">
+                            <img src="https://placehold.co/32x32" alt="ICICI Bank logo with orange and blue gradient design and modern typography" class="bank-logo" />
+                            <div class="bank-name">ICICI Bank</div>
+                        </div>
+                        <div class="bank-option" onclick="selectBank(this, 'axis')">
+                            <img src="https://placehold.co/32x32" alt="Axis Bank logo with burgundy red background and white stylized A symbol" class="bank-logo" />
+                            <div class="bank-name">Axis Bank</div>
+                        </div>
+                        <div class="bank-option" onclick="selectBank(this, 'sbi')">
+                            <img src="https://placehold.co/32x32" alt="State Bank of India logo with blue circular design and traditional banking symbol" class="bank-logo" />
+                            <div class="bank-name">SBI</div>
+                        </div>
+                        <div class="bank-option" onclick="selectBank(this, 'kotak')">
+                            <img src="https://placehold.co/32x32" alt="Kotak Mahindra Bank logo with red background and white K letter in modern font" class="bank-logo" />
+                            <div class="bank-name">Kotak</div>
+                        </div>
+                        <div class="bank-option" onclick="selectBank(this, 'pnb')">
+                            <img src="https://placehold.co/32x32" alt="Punjab National Bank logo with blue and orange colors and traditional design elements" class="bank-logo" />
+                            <div class="bank-name">PNB</div>
+                        </div>
+                        <div class="bank-option" onclick="selectBank(this, 'canara')">
+                            <img src="https://placehold.co/32x32" alt="Canara Bank logo with orange background and white text in traditional banking style" class="bank-logo" />
+                            <div class="bank-name">Canara</div>
+                        </div>
+                        <div class="bank-option" onclick="openBankModal()">
+                            <div class="others-bank">⋯</div>
+                            <div class="bank-name">Others</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="payment-footer">
+            <div class="powered-by">
+                Powered by 
+                <div class="phonepe-logo">P</div>
+                <span class="phonepe-text">PhonePe</span>
+            </div>
+            <button class="pay-button" onclick="processPayment()" id="pay-btn">PAY ₹1</button>
+        </div>
+    </div>
+
+    <!-- Bank Selection Modal -->
+    <div class="modal" id="bank-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-button" onclick="closeBankModal()">←</button>
+                <div>
+                    <div class="modal-title">Select bank account</div>
+                </div>
+            </div>
+            <div class="modal-subtitle">
+                You will be redirected to the bank's page for authentication using Customer ID & password
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search by bank name" id="bank-search" oninput="filterBanks()">
+            </div>
+            <div class="bank-list" id="bank-list">
+                <div class="bank-item" onclick="selectBankFromModal('State Bank of India')">
+                    <div class="bank-item-icon" style="background: #0f4c8c;">SBI</div>
+                    <div class="bank-item-name">State Bank of India</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Punjab National Bank')">
+                    <div class="bank-item-icon" style="background: #ed1c24;">PNB</div>
+                    <div class="bank-item-name">Punjab National Bank</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Bank of Baroda')">
+                    <div class="bank-item-icon" style="background: #0072ce;">BOB</div>
+                    <div class="bank-item-name">Bank of Baroda</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Canara Bank')">
+                    <div class="bank-item-icon" style="background: #ed1c24;">CB</div>
+                    <div class="bank-item-name">Canara Bank</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Union Bank of India')">
+                    <div class="bank-item-icon" style="background: #0066cc;">UBI</div>
+                    <div class="bank-item-name">Union Bank of India</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Indian Bank')">
+                    <div class="bank-item-icon" style="background: #4a90e2;">IB</div>
+                    <div class="bank-item-name">Indian Bank</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Central Bank of India')">
+                    <div class="bank-item-icon" style="background: #ff6b35;">CBI</div>
+                    <div class="bank-item-name">Central Bank of India</div>
+                </div>
+                <div class="bank-item" onclick="selectBankFromModal('Bank of India')">
+                    <div class="bank-item-icon" style="background: #ff9500;">BOI</div>
+                    <div class="bank-item-name">Bank of India</div>
+                </div>
+            </div>
+            <div class="no-results" id="no-results" style="display: none;">
+                <p>Can't find your bank here? We are working on getting more partner banks here.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = null;
+        let selectedBank = null;
+        let timerInterval = null;
+        let isProcessing = false;
+
+        // Bank data for search functionality
+        const banks = [
+            { name: 'State Bank of India', icon: 'SBI', color: '#0f4c8c' },
+            { name: 'Punjab National Bank', icon: 'PNB', color: '#ed1c24' },
+            { name: 'Bank of Baroda', icon: 'BOB', color: '#0072ce' },
+            { name: 'Canara Bank', icon: 'CB', color: '#ed1c24' },
+            { name: 'Union Bank of India', icon: 'UBI', color: '#0066cc' },
+            { name: 'Indian Bank', icon: 'IB', color: '#4a90e2' },
+            { name: 'Central Bank of India', icon: 'CBI', color: '#ff6b35' },
+            { name: 'Bank of India', icon: 'BOI', color: '#ff9500' }
+        ];
+
+        function selectPaymentMethod(method) {
+            if (isProcessing) return;
+
+            // If clicking the same method, toggle it
+            if (selectedPaymentMethod === method) {
+                // Clear selection
+                selectedPaymentMethod = null;
+                document.querySelectorAll('.payment-radio').forEach(radio => {
+                    radio.classList.remove('selected');
+                });
+                document.querySelectorAll('.payment-option').forEach(option => {
+                    option.classList.remove('active');
+                });
+                document.querySelectorAll('.payment-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+                return;
+            }
+
+            // Clear all selections
+            document.querySelectorAll('.payment-radio').forEach(radio => {
+                radio.classList.remove('selected');
+            });
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelectorAll('.payment-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Select current method
+            selectedPaymentMethod = method;
+            const radio = document.getElementById(method + '-radio');
+            const content = document.getElementById(method + '-content');
+            const option = document.querySelector(`[onclick="selectPaymentMethod('${method}')"]`);
+
+            radio.classList.add('selected');
+            content.classList.add('active');
+            option.classList.add('active');
+
+            // Start timer for QR code
+            if (method === 'qr') {
+                startTimer();
+            } else if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            // Auto-focus inputs
+            setTimeout(() => {
+                if (method === 'upi') {
+                    document.getElementById('upi-id').focus();
+                } else if (method === 'card') {
+                    document.getElementById('card-number').focus();
+                }
+            }, 300);
+        }
+
+        function selectBank(element, bankName) {
+            // Clear previous selection
+            document.querySelectorAll('.bank-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Select current bank
+            element.classList.add('selected');
+            selectedBank = bankName;
+        }
+
+        function openBankModal() {
+            document.getElementById('bank-modal').classList.add('show');
+        }
+
+        function closeBankModal() {
+            document.getElementById('bank-modal').classList.remove('show');
+        }
+
+        function selectBankFromModal(bankName) {
+            selectedBank = bankName;
+            closeBankModal();
+            
+            // Update the Others option to show selected bank
+            const othersOption = document.querySelector('.bank-option:last-child');
+            othersOption.classList.add('selected');
+            othersOption.querySelector('.bank-name').textContent = bankName;
+        }
+
+        function filterBanks() {
+            const searchTerm = document.getElementById('bank-search').value.toLowerCase();
+            const bankList = document.getElementById('bank-list');
+            const noResults = document.getElementById('no-results');
+            
+            let hasResults = false;
+            
+            bankList.querySelectorAll('.bank-item').forEach(item => {
+                const bankName = item.querySelector('.bank-item-name').textContent.toLowerCase();
+                if (bankName.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasResults = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            noResults.style.display = hasResults ? 'none' : 'block';
+        }
+
+        function startTimer() {
+            let minutes = 19;
+            let seconds = 52;
+            
+            const updateTimer = () => {
+                const formattedMinutes = minutes.toString().padStart(2, '0');
+                const formattedSeconds = seconds.toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${formattedMinutes}:${formattedSeconds}`;
+            };
+
+            updateTimer();
+            
+            timerInterval = setInterval(() => {
+                seconds--;
+                if (seconds < 0) {
+                    minutes--;
+                    seconds = 59;
+                }
+                
+                if (minutes < 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timer').textContent = '00:00';
+                    document.querySelector('.status-text').textContent = 'Payment timeout. Please try again.';
+                    return;
+                }
+                
+                updateTimer();
+            }, 1000);
+        }
+
+        function formatCardNumber(input) {
+            let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            if (formattedValue !== input.value) {
+                input.value = formattedValue;
+            }
+        }
+
+        function validateCardExpiry(month, year) {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear() % 100;
+            const currentMonth = currentDate.getMonth() + 1;
+            
+            const cardYear = parseInt(year);
+            const cardMonth = parseInt(month);
+            
+            if (cardYear > currentYear) return true;
+            if (cardYear === currentYear && cardMonth >= currentMonth) return true;
+            return false;
+        }
+
+        function processPayment() {
+            if (isProcessing) return;
+
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            isProcessing = true;
+            const payBtn = document.getElementById('pay-btn');
+            payBtn.innerHTML = '<div class="spinner"></div>';
+            payBtn.disabled = true;
+
+            // Simulate processing time
+            setTimeout(() => {
+                let success = false;
+                let message = '';
+
+                switch (selectedPaymentMethod) {
+                    case 'qr':
+                        success = true;
+                        message = 'QR Code payment initiated successfully!\n\nPlease scan the QR code with your UPI app to complete the payment.\n\nTransaction ID: TXN' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                        break;
+                    
+                    case 'upi':
+                        const upiId = document.getElementById('upi-id').value.trim();
+                        if (!upiId) {
+                            message = 'Please enter your UPI ID';
+                            break;
+                        }
+                        if (!upiId.includes('@') || upiId.length < 5) {
+                            message = 'Please enter a valid UPI ID (e.g., yourname@paytm)';
+                            break;
+                        }
+                        success = true;
+                        message = `UPI payment initiated successfully!\n\nUPI ID: ${upiId}\nAmount: ₹1\n\nYou will receive a payment request on your UPI app.\n\nTransaction ID: TXN` + Math.random().toString(36).substr(2, 9).toUpperCase();
+                        break;
+                    
+                    case 'card':
+                        const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+                        const cardName = document.getElementById('card-name').value.trim();
+                        const cardMonth = document.getElementById('card-month').value;
+                        const cardYear = document.getElementById('card-year').value;
+                        const cardCvv = document.getElementById('card-cvv').value;
+                        
+                        if (!cardNumber || cardNumber.length < 13) {
+                            message = 'Please enter a valid card number';
+                            break;
+                        }
+                        if (!cardName || cardName.length < 2) {
+                            message = 'Please enter the card holder name';
+                            break;
+                        }
+                        if (!cardMonth || !cardYear || cardMonth < 1 || cardMonth > 12) {
+                            message = 'Please enter valid expiry date';
+                            break;
+                        }
+                        if (!validateCardExpiry(cardMonth, cardYear)) {
+                            message = 'Card has expired. Please use a valid card';
+                            break;
+                        }
+                        if (!cardCvv || cardCvv.length < 3) {
+                            message = 'Please enter valid CVV';
+                            break;
+                        }
+                        
+                        success = true;
+                        message = `Card payment initiated successfully!\n\nCard: **** **** **** ${cardNumber.slice(-4)}\nAmount: ₹1\n\nRedirecting to bank's secure payment page...\n\nTransaction ID: TXN` + Math.random().toString(36).substr(2, 9).toUpperCase();
+                        break;
+                    
+                    case 'netbanking':
+                        if (!selectedBank) {
+                            message = 'Please select a bank';
+                            break;
+                        }
+                        success = true;
+                        message = `Net Banking payment initiated successfully!\n\nBank: ${selectedBank.toUpperCase()}\nAmount: ₹1\n\nRedirecting to ${selectedBank.toUpperCase()} bank's secure login page...\n\nTransaction ID: TXN` + Math.random().toString(36).substr(2, 9).toUpperCase();
+                        break;
+                }
+
+                alert(message);
+
+                if (success) {
+                    // Mark as completed
+                    const method = document.getElementById(selectedPaymentMethod + '-method');
+                    method.classList.add('completed');
+                    
+                    // Update button
+                    payBtn.innerHTML = 'PAYMENT INITIATED ✓';
+                    payBtn.style.background = '#00c853';
+                } else {
+                    // Reset button
+                    payBtn.innerHTML = 'PAY ₹1';
+                    payBtn.disabled = false;
+                    isProcessing = false;
+                }
+            }, 2000);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Don't initialize any payment method - start with all minimized
+            
+            // Card number formatting
+            document.getElementById('card-number').addEventListener('input', function() {
+                formatCardNumber(this);
+            });
+
+            // Numeric validation for month/year/cvv
+            document.getElementById('card-month').addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 2);
+                if (this.value > 12) this.value = '12';
+            });
+
+            document.getElementById('card-year').addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 2);
+            });
+
+            document.getElementById('card-cvv').addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+            });
+
+            // UPI ID validation
+            document.getElementById('upi-id').addEventListener('input', function() {
+                this.value = this.value.toLowerCase().replace(/\s/g, '');
+            });
+
+            // CVV info tooltip
+            document.querySelector('.cvv-info').addEventListener('click', function() {
+                alert('CVV is the 3-digit security code on the back of your card (4 digits for American Express)');
+            });
+        });
+
+        // Add click outside modal to close
+        document.getElementById('bank-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBankModal();
+            }
+        });
+
+        // Prevent form submission on Enter
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processPayment();
+            }
+        });
+    </script>
+</body>
+</html>
