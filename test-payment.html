@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Test</title>
+    <style>
+        .payment-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            background: #f8f9ff;
+            border: 1px solid red;
+        }
+
+        .payment-content.active {
+            max-height: 500px;
+            padding: 20px;
+        }
+
+        .payment-option {
+            padding: 10px;
+            cursor: pointer;
+            background: #f0f0f0;
+            margin: 5px 0;
+        }
+
+        .payment-option.active {
+            background: #e0e0e0;
+        }
+
+        .payment-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .payment-radio.selected {
+            background: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Payment Method Test</h1>
+    
+    <div class="payment-method">
+        <div class="payment-option" onclick="selectPaymentMethod('qr')">
+            QR Code Payment
+            <span class="payment-radio" id="qr-radio"></span>
+        </div>
+        <div class="payment-content" id="qr-content">
+            <p>QR Code content here!</p>
+        </div>
+    </div>
+
+    <div class="payment-method">
+        <div class="payment-option" onclick="selectPaymentMethod('upi')">
+            UPI Payment
+            <span class="payment-radio" id="upi-radio"></span>
+        </div>
+        <div class="payment-content" id="upi-content">
+            <p>UPI content here!</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = null;
+
+        function selectPaymentMethod(method) {
+            console.log('Selecting payment method:', method);
+            
+            // If clicking the same method, toggle it
+            if (selectedPaymentMethod === method) {
+                console.log('Toggling off method:', method);
+                selectedPaymentMethod = null;
+                document.querySelectorAll('.payment-radio').forEach(radio => {
+                    radio.classList.remove('selected');
+                });
+                document.querySelectorAll('.payment-option').forEach(option => {
+                    option.classList.remove('active');
+                });
+                document.querySelectorAll('.payment-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                return;
+            }
+
+            // Clear all selections
+            document.querySelectorAll('.payment-radio').forEach(radio => {
+                radio.classList.remove('selected');
+            });
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelectorAll('.payment-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Select current method
+            selectedPaymentMethod = method;
+            const radio = document.getElementById(method + '-radio');
+            const content = document.getElementById(method + '-content');
+            const option = document.querySelector(`[onclick="selectPaymentMethod('${method}')"]`);
+
+            console.log('Elements found:', { radio, content, option });
+
+            if (radio) radio.classList.add('selected');
+            if (content) content.classList.add('active');
+            if (option) option.classList.add('active');
+        }
+    </script>
+</body>
+</html>
